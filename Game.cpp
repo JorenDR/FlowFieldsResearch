@@ -21,9 +21,7 @@ void Game::Initialize( )
 	{
 		for (int y{ 0 }; y < m_GridHeight; ++y)
 		{
-			Square* newSquare = new Square{};
-			newSquare->x = x * m_RectSize + m_RectSize / 2;
-			newSquare->y = y * m_RectSize + m_RectSize / 2;
+			Square* newSquare = new Square{ x * m_RectSize + m_RectSize / 2, y * m_RectSize + m_RectSize / 2 };
 			m_VecSquares.push_back(newSquare);
 		}
 	}
@@ -51,50 +49,78 @@ void Game::Update( float elapsedSec )
 {
 	for (Agent* currentAgent : m_VecAgentPointers)
 	{
-		currentAgent->MoveTowards(Point2f(0,0));
+		if (currentAgent->Update(elapsedSec))
+		{
+			for (Square* currentSquare : m_VecSquares)
+			{
+				if (currentSquare->m_PointingAt.x != 0 &&
+					currentAgent->GetPosition().x < currentSquare->m_X + m_RectSize / 2 &&
+					currentAgent->GetPosition().x > currentSquare->m_X - m_RectSize / 2 &&
+					m_Window.height - currentAgent->GetPosition().y < currentSquare->m_Y + m_RectSize / 2 &&
+					m_Window.height - currentAgent->GetPosition().y > currentSquare->m_Y - m_RectSize / 2)
+				{
+					currentAgent->SetDestination(currentSquare->m_PointingAt);
+				}
+			}
+		}
 	}
 }
 
 void Game::Draw( ) const
 {
+	float ellipseSize{ 2.f };
 	ClearBackground( );
 	utils::SetColor(Color4f( 1, 1, 1, 1 ));
 
 	for (const Square* currentSquare : m_VecSquares)
 	{
 		utils::SetColor(Color4f(1, 1, 1, 1));
-		utils::DrawRect(Rectf(currentSquare->x - m_RectSize / 2, currentSquare->y - m_RectSize / 2, m_RectSize, m_RectSize));
+		utils::DrawRect(Rectf(currentSquare->m_X - m_RectSize / 2, currentSquare->m_Y - m_RectSize / 2, m_RectSize, m_RectSize));
+		utils::DrawEllipse(currentSquare->m_X, currentSquare->m_Y, 2.f, 2.f);
 
-		switch (currentSquare->direction)
+		switch (currentSquare->m_Direction)
 		{
-		case Direction::Up:
+		case Square::Direction::Up:
+			utils::DrawEllipse(currentSquare->m_X, currentSquare->m_Y + ellipseSize*2, ellipseSize, ellipseSize);
+			utils::DrawEllipse(currentSquare->m_X, currentSquare->m_Y + ellipseSize*4, ellipseSize, ellipseSize);
 			utils::SetColor(Color4f(1, 0, 1, 1));
 			break;
-		case Direction::Down:
+		case Square::Direction::Down:
+			utils::DrawEllipse(currentSquare->m_X, currentSquare->m_Y - ellipseSize * 2, ellipseSize, ellipseSize);
+			utils::DrawEllipse(currentSquare->m_X, currentSquare->m_Y - ellipseSize * 4, ellipseSize, ellipseSize);
 			utils::SetColor(Color4f(0, 0, 0, 1));
 			break;
-		case Direction::Left:
+		case Square::Direction::Left:
+			utils::DrawEllipse(currentSquare->m_X - ellipseSize * 2, currentSquare->m_Y , ellipseSize, ellipseSize);
+			utils::DrawEllipse(currentSquare->m_X - ellipseSize * 4, currentSquare->m_Y , ellipseSize, ellipseSize);
 			utils::SetColor(Color4f(0, 1, 1, 1));
 			break;
-		case Direction::Right:
+		case Square::Direction::Right:
+			utils::DrawEllipse(currentSquare->m_X + ellipseSize * 2, currentSquare->m_Y, ellipseSize, ellipseSize);
+			utils::DrawEllipse(currentSquare->m_X + ellipseSize * 4, currentSquare->m_Y, ellipseSize, ellipseSize);
 			utils::SetColor(Color4f(0, 1, 0, 1));
 			break;
-		case Direction::Exit:
+		case Square::Direction::Exit:
 			utils::SetColor(Color4f(1, 0, 0, 1));
 			break;
 		default:
 			break;
 		}
 
-		if(currentSquare->direction != Direction::Null) utils::FillRect(Rectf(currentSquare->x - m_RectSize / 2, currentSquare->y - m_RectSize / 2, m_RectSize, m_RectSize));
+		if (currentSquare->m_PointingAt.x != 0)
+		{
+			utils::DrawLine(Point2f(currentSquare->m_X, currentSquare->m_Y), currentSquare->m_PointingAt);
+		}
 
-		//if (currentSquare.direction != Direction::Null && currentSquare.direction != Direction::Exit)
+		//if(currentSquare->m_Direction != Square::Direction::Null) utils::FillRect(Rectf(currentSquare->m_X - m_RectSize / 2, currentSquare->m_Y - m_RectSize / 2, m_RectSize, m_RectSize));
+
+		//if (currentSquare.direction != Square::Direction::Null && currentSquare.direction != Square::Direction::Exit)
 		//{
 		//	utils::SetColor(Color4f(0, 1, 0, 1));
 		//	utils::FillRect(Rectf(currentSquare.x - m_RectSize / 2, currentSquare.y - m_RectSize / 2, m_RectSize, m_RectSize));
 		//}
 		//
-		//if (currentSquare.direction == Direction::Exit)
+		//if (currentSquare.direction == Square::Direction::Exit)
 		//{
 		//	utils::SetColor(Color4f(1, 0, 0, 1));
 		//	utils::FillRect(Rectf(currentSquare.x - m_RectSize / 2, currentSquare.y - m_RectSize / 2, m_RectSize, m_RectSize));
@@ -127,12 +153,12 @@ void Game::ProcessMouseDownEvent( const SDL_MouseButtonEvent& e )
 
 		for (Square* currentSquare : m_VecSquares)
 		{
-			currentSquare->direction = Direction::Null;
+			currentSquare->m_Direction = Square::Direction::Null;
 
-			if (e.x < currentSquare->x + m_RectSize / 2 && e.x > currentSquare->x - m_RectSize / 2
-				&& m_Window.height - e.y < currentSquare->y + m_RectSize / 2 && m_Window.height - e.y > currentSquare->y - m_RectSize / 2)
+			if (e.x < currentSquare->m_X + m_RectSize / 2 && e.x > currentSquare->m_X - m_RectSize / 2
+				&& m_Window.height - e.y < currentSquare->m_Y + m_RectSize / 2 && m_Window.height - e.y > currentSquare->m_Y - m_RectSize / 2)
 			{
-				currentSquare->direction = Direction::Exit;
+				currentSquare->m_Direction = Square::Direction::Exit;
 				CalculateFlowField(currentSquare);
 			}
 		}
@@ -172,6 +198,117 @@ void Game::ClearBackground( ) const
 
 void Game::CalculateFlowField(Square* exitPoint)
 {
+	std::cout << "\n\nChecking Flow Field:\n";
+
+	Point2f pointToCheck{exitPoint->m_X, exitPoint->m_Y};
+	
+	for (Square* currentSquare : m_VecSquares)
+	{
+		currentSquare->m_PointingAt = Point2f(0, 0);
+	}
+	
+	std::list<Square*> openList, closedList;
+	openList.push_back(exitPoint);
+	
+	while (!openList.empty())
+	{
+		Square* currentSquare{ openList.front() };
+	
+		if (currentSquare->m_Direction == Square::Direction::Null)
+		{
+			if (currentSquare->m_X + m_RectSize == pointToCheck.x && currentSquare->m_Y == pointToCheck.y)
+			{
+				currentSquare->m_Direction = Square::Direction::Right;
+				currentSquare->m_PointingAt = pointToCheck;
+				std::cout << "\nSquare pointing right";
+			}
+	
+			else if (currentSquare->m_X - m_RectSize == pointToCheck.x && currentSquare->m_Y == pointToCheck.y)
+			{
+				currentSquare->m_Direction = Square::Direction::Left;
+				currentSquare->m_PointingAt = pointToCheck;
+				std::cout << "\nSquare pointing left";
+			}
+	
+			else if (currentSquare->m_Y - m_RectSize == pointToCheck.y && currentSquare->m_X == pointToCheck.x)
+			{
+				currentSquare->m_Direction = Square::Direction::Down;
+				currentSquare->m_PointingAt = pointToCheck;
+				std::cout << "\nSquare pointing down";
+			}
+	
+			else if (currentSquare->m_Y + m_RectSize == pointToCheck.y && currentSquare->m_X == pointToCheck.x)
+			{
+				currentSquare->m_Direction = Square::Direction::Up;
+				currentSquare->m_PointingAt = pointToCheck;
+				std::cout << "\nSquare pointing up";
+			}
+		}
+	
+		auto neighbours = GetNeighbours(currentSquare);
+		for (Square* newSquare : neighbours)
+		{
+			if (std::find(openList.begin(), openList.end(), newSquare) == openList.end() && std::find(closedList.begin(), closedList.end(), newSquare) == closedList.end())
+			{
+				openList.push_back(newSquare);
+			}
+		}
+	
+		//pointToCheck = Point2f(currentSquare->m_X, currentSquare->m_Y);
+		closedList.push_back(currentSquare);
+		openList.pop_front();
+	}
+	
+
+	/*
+	
+	while (!openList.empty())
+	{
+		Square* currentSquare{ openList.front() };
+
+		if (currentSquare->m_Direction == Square::Direction::Null)
+		{
+			if (currentSquare->m_X + m_RectSize == pointToCheck.x && currentSquare->m_Y == pointToCheck.y)
+			{
+				currentSquare->m_Direction = Square::Direction::Right;
+				std::cout << "\nSquare pointing right";
+			}
+
+			else if (currentSquare->m_X - m_RectSize == pointToCheck.x && currentSquare->m_Y == pointToCheck.y)
+			{
+				currentSquare->m_Direction = Square::Direction::Left;
+				std::cout << "\nSquare pointing left";
+			}
+
+			else if (currentSquare->m_Y - m_RectSize == pointToCheck.y && currentSquare->m_X == pointToCheck.x)
+			{
+				currentSquare->m_Direction = Square::Direction::Down;
+				std::cout << "\nSquare pointing down";
+			}
+
+			else if (currentSquare->m_Y + m_RectSize == pointToCheck.y && currentSquare->m_X == pointToCheck.x)
+			{
+				currentSquare->m_Direction = Square::Direction::Up;
+				std::cout << "\nSquare pointing up";
+			}
+		}
+
+		auto neighbours = GetNeighbours(currentSquare);
+		for (Square* newSquare : neighbours)
+		{
+			if (std::find(openList.begin(), openList.end(), newSquare) == openList.end() && std::find(closedList.begin(), closedList.end(), newSquare) == closedList.end())
+			{
+				openList.push_back(newSquare);
+			}
+		}
+
+		closedList.push_back(currentSquare);
+		openList.pop_front();
+	}
+
+	*/
+
+	/*
 	std::vector<Square*> checked, toBeChecked;
 	Square* pointingAt = exitPoint;
 	
@@ -182,29 +319,29 @@ void Game::CalculateFlowField(Square* exitPoint)
 	
 	for (Square* currentSquare : toBeChecked)
 	{
-		if (currentSquare->direction == Direction::Null)
+		if (currentSquare->m_Direction == Square::Direction::Null)
 		{
-			if (currentSquare->x + m_RectSize == pointingAt->x && currentSquare->y == pointingAt->y)
+			if (currentSquare->m_X + m_RectSize == pointingAt->m_X && currentSquare->m_Y == pointingAt->m_Y)
 			{
-				currentSquare->direction = Direction::Right;
+				currentSquare->m_Direction = Square::Direction::Right;
 				std::cout << "\nSquare pointing right";
 			}
 	
-			else if (currentSquare->x - m_RectSize == pointingAt->x && currentSquare->y == pointingAt->y)
+			else if (currentSquare->m_X - m_RectSize == pointingAt->m_X && currentSquare->m_Y == pointingAt->m_Y)
 			{
-				currentSquare->direction = Direction::Left;
+				currentSquare->m_Direction = Square::Direction::Left;
 				std::cout << "\nSquare pointing left";
 			}
 	
-			else if (currentSquare->y - m_RectSize == pointingAt->y && currentSquare->x == pointingAt->x)
+			else if (currentSquare->m_Y - m_RectSize == pointingAt->m_Y && currentSquare->m_X == pointingAt->m_X)
 			{
-				currentSquare->direction = Direction::Up;
+				currentSquare->m_Direction = Square::Direction::Up;
 				std::cout << "\nSquare pointing up";
 			}
 	
-			else if (currentSquare->y + m_RectSize == pointingAt->y && currentSquare->x == pointingAt->x)
+			else if (currentSquare->m_Y + m_RectSize == pointingAt->m_Y && currentSquare->m_X == pointingAt->m_X)
 			{
-				currentSquare->direction = Direction::Down;
+				currentSquare->m_Direction = Square::Direction::Down;
 				std::cout << "\nSquare pointing down";
 			}
 		}
@@ -216,7 +353,9 @@ void Game::CalculateFlowField(Square* exitPoint)
 	m_VecSquares.clear();
 	m_VecSquares = toBeChecked;
 
-	//unsigned int targetID = exitPoint->y * m_GridWidth + exitPoint->x;
+	*/
+
+	//unsigned int targetID = exitPoint->m_Y * m_GridWidth + exitPoint->m_X;
 	//
 	//std::list<unsigned int> openList;
 	//
@@ -259,14 +398,14 @@ void Game::CalculateFlowField(Square* exitPoint)
 
 void Game::SpawnAgent(Point2f position)
 {
-	Point2f pointToSpawn{ m_VecSquares.at(0)->x, m_VecSquares.at(0)->y };
+	Point2f pointToSpawn{ m_VecSquares.at(0)->m_X, m_VecSquares.at(0)->m_Y };
 
 	for (Square* currentSquare : m_VecSquares)
 	{
-		if (position.x < currentSquare->x + m_RectSize / 2 && position.x > currentSquare->x - m_RectSize / 2
-			&& m_Window.height - position.y < currentSquare->y + m_RectSize / 2 && m_Window.height - position.y > currentSquare->y - m_RectSize / 2)
+		if (position.x < currentSquare->m_X + m_RectSize / 2 && position.x > currentSquare->m_X - m_RectSize / 2
+			&& m_Window.height - position.y < currentSquare->m_Y + m_RectSize / 2 && m_Window.height - position.y > currentSquare->m_Y - m_RectSize / 2)
 		{
-			pointToSpawn = Point2f(currentSquare->x, currentSquare->y);
+			pointToSpawn = Point2f(currentSquare->m_X, currentSquare->m_Y);
 		}
 	}
 
@@ -274,33 +413,19 @@ void Game::SpawnAgent(Point2f position)
 	m_VecAgentPointers.push_back(newAgent);
 }
 
+std::vector<Square*> Game::GetNeighbours(Square* square)
+{
+	std::vector<Square*> neighbours;
+	for (auto currentSquare : m_VecSquares)
+	{
+		if ((currentSquare->m_X + m_RectSize == square->m_X && currentSquare->m_Y == square->m_Y) ||
+			(currentSquare->m_X - m_RectSize == square->m_X && currentSquare->m_Y == square->m_Y) ||
+			(currentSquare->m_Y - m_RectSize == square->m_Y && currentSquare->m_X == square->m_X) ||
+			(currentSquare->m_Y + m_RectSize == square->m_Y && currentSquare->m_X == square->m_X))
+		{
+			neighbours.push_back(currentSquare);
+		}
+	}
 
-//std::vector<Square*> Game::GetNeighbours(int x, int y)
-//{
-//	std::vector<Square*> neighboursToReturn;
-//
-//	for (Square* currentSquare : m_VecSquares)
-//	{
-//		if (currentSquare->x + m_RectSize == x && currentSquare->y == y)
-//		{
-//			neighboursToReturn.push_back(currentSquare);
-//		}
-//	
-//		else if (currentSquare->x - m_RectSize == x && currentSquare->y == y)
-//		{
-//			neighboursToReturn.push_back(currentSquare);
-//		}
-//	
-//		else if (currentSquare->y - m_RectSize == y && currentSquare->x == x)
-//		{
-//			neighboursToReturn.push_back(currentSquare);
-//		}
-//	
-//		else if (currentSquare->y + m_RectSize == y && currentSquare->x == x)
-//		{
-//			neighboursToReturn.push_back(currentSquare);
-//		}
-//	}
-//
-//	return neighboursToReturn;
-//}
+	return neighbours;
+}

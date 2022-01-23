@@ -54,6 +54,9 @@
     <ClCompile Include="Agent.cpp">
       <Filter>Game</Filter>
     </ClCompile>
+    <ClCompile Include="Square.cpp">
+      <Filter>Game</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h">
@@ -90,6 +93,9 @@
       <Filter>Engine</Filter>
     </ClInclude>
     <ClInclude Include="Agent.h">
+      <Filter>Game</Filter>
+    </ClInclude>
+    <ClInclude Include="Square.h">
       <Filter>Game</Filter>
     </ClInclude>
   </ItemGroup>

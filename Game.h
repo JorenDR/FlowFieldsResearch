@@ -1,6 +1,7 @@
 #pragma once
 #include <vector>
 #include <list>
+#include "Square.h"
 
 class Agent;
 
@@ -27,23 +28,6 @@ public:
 private:
 	// DATA MEMBERS
 
-	enum class Direction
-	{
-		Null,
-		Up,
-		Down,
-		Left,
-		Right,
-		Exit
-	};
-
-	struct Square
-	{
-		float x{ 0 }, y{ 0 };
-		Direction direction = Direction::Null;
-		bool obstacle{ false };
-	};
-
 	const Window m_Window;
 	static const int m_GridWidth{ 20 }, m_GridHeight{ 10 };
 	float m_RectSize{ 40 };
@@ -57,5 +41,5 @@ private:
 
 	void CalculateFlowField(Square* exitPoint);
 	void SpawnAgent(Point2f position);
-	//std::vector<Square*> GetNeighbours(int x, int y);
+	std::vector<Square*> GetNeighbours(Square* square);
 };
