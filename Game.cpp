@@ -178,11 +178,11 @@ void Game::Draw( ) const
 	utils::FillRect(Rectf(m_Start->m_X - m_RectSize / 2, m_Start->m_Y - m_RectSize / 2, m_RectSize, m_RectSize));
 
 
-	//for (Square* currentSquare : m_Path)
-	//{
-	//	utils::SetColor(Color4f(1.f, 0, 0, 1.f));
-	//	utils::DrawEllipse(Point2f(currentSquare->m_X, currentSquare->m_Y), 10.f, 10.f);
-	//}
+	for (Square* currentSquare : m_Path)
+	{
+		utils::SetColor(Color4f(1.f, 0, 0, 1.f));
+		utils::DrawEllipse(Point2f(currentSquare->m_X, currentSquare->m_Y), 10.f, 10.f);
+	}
 
 	for (Agent* currentAgent : m_VecAgentPointers)
 	{
@@ -210,7 +210,7 @@ void Game::ProcessMouseDownEvent( const SDL_MouseButtonEvent& e )
 
 		for (Square* currentSquare : m_VecSquares)
 		{
-			currentSquare->m_Direction = Square::Direction::Null;
+			//currentSquare->m_Direction = Square::Direction::Null;
 
 			if (e.x < currentSquare->m_X + m_RectSize / 2 && e.x > currentSquare->m_X - m_RectSize / 2
 				&& m_Window.height - e.y < currentSquare->m_Y + m_RectSize / 2 && m_Window.height - e.y > currentSquare->m_Y - m_RectSize / 2)
@@ -218,15 +218,16 @@ void Game::ProcessMouseDownEvent( const SDL_MouseButtonEvent& e )
 				//currentSquare->m_Direction = Square::Direction::Exit;
 				//CalculateFlowField(currentSquare);
 				m_Start = currentSquare;
-				m_Path = Dijkstra(m_Start, m_End);
+				//m_Path = Dijkstra(m_Start, m_End);
 
 				for (Square* pathSquare : m_VecSquares)
 				{
 					if (pathSquare != currentSquare)
 					{
-						Dijkstra(pathSquare, currentSquare);
+						Dijkstra(currentSquare, pathSquare);
 					}
 				}
+				std::cout << "\nClicked position: [" << currentSquare->m_X << ", " << currentSquare->m_Y << "]";
 			}
 		}
 
@@ -243,15 +244,25 @@ void Game::ProcessMouseDownEvent( const SDL_MouseButtonEvent& e )
 			{
 				//currentSquare->m_Direction = Square::Direction::Exit;
 				//CalculateFlowField(currentSquare);
-				//m_End = currentSquare;
-				//m_Path = Dijkstra(m_Start, m_End);
+				m_End = currentSquare;
+				m_Path = Dijkstra(m_Start, m_End);
 
-				SpawnAgent(Point2f(currentSquare->m_X, m_Window.height - currentSquare->m_Y));
+				//SpawnAgent(Point2f(currentSquare->m_X, m_Window.height - currentSquare->m_Y));
 			}
 		}
 
 		break;
 	case SDL_BUTTON_MIDDLE:
+		for (Square* currentSquare : m_VecSquares)
+		{
+
+			if (e.x < currentSquare->m_X + m_RectSize / 2 && e.x > currentSquare->m_X - m_RectSize / 2
+				&& m_Window.height - e.y < currentSquare->m_Y + m_RectSize / 2 && m_Window.height - e.y > currentSquare->m_Y - m_RectSize / 2)
+			{
+
+				SpawnAgent(Point2f(currentSquare->m_X, m_Window.height - currentSquare->m_Y));
+			}
+		}
 		break;
 	}
 }
@@ -680,6 +691,10 @@ std::vector<Square*> Game::Dijkstra(Square* startPoint, Square* endPoint)
 			//path.at(path.size() - 1)->m_PointingAtSquare = pCurrentNode;
 			pCurrentNode->m_PointingAtSquare = path.at(path.size() - 1);
 		}
+		else
+		{
+			pCurrentNode->m_PointingAtSquare = endPoint;
+		}
 
 		path.push_back(pCurrentNode);
 		pCurrentNode = closedList[pCurrentNode];
@@ -687,9 +702,16 @@ std::vector<Square*> Game::Dijkstra(Square* startPoint, Square* endPoint)
 	if (path.size() > 2)
 		endPoint->m_PointingAtSquare = path.at(1);
 
+	for (unsigned int currentSquare{ 0 }; currentSquare < path.size()-1; ++currentSquare)
+	{
+		//currentSquare->m_PointingAtSquare = path;
+		path.at(currentSquare)->m_PointingAtSquare = path.at(currentSquare + 1);
+	}
+
 	path.push_back(startPoint);
 	startPoint->m_PointingAtSquare = path.at(path.size() - 1);
-	std::reverse(path.begin(), path.end());
+	//path.at(0)->m_PointingAtSquare = endPoint;
+	//std::reverse(path.begin(), path.end());
 
 	return path;
 }
