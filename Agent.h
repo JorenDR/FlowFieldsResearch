@@ -11,6 +11,10 @@ public:
 
 	bool GetIsMoving();
 	Point2f GetPosition();
+	Point2f GetDestination();
+	Point2f MoveTowards(const Point2f& p1, const Point2f& p2, const float& distance);
+
+	float GetSpeed();
 
 	void SetDestination(Point2f target);
 private:

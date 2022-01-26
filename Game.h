@@ -1,6 +1,8 @@
 #pragma once
 #include <vector>
 #include <list>
+#include <queue>
+#include <map>
 #include "Square.h"
 
 class Agent;
@@ -32,14 +34,21 @@ private:
 	static const int m_GridWidth{ 20 }, m_GridHeight{ 10 };
 	float m_RectSize{ 40 };
 	std::vector<Square*> m_VecSquares;
+	std::vector<Square*> m_Path;
 	std::vector<Agent*> m_VecAgentPointers;
+
+	Square* m_Start;
+	Square* m_End;
 
 	// FUNCTIONS
 	void Initialize( );
 	void Cleanup( );
 	void ClearBackground( ) const;
 
+	float Distance(float x1, float y1, float x2, float y2);
+
 	void CalculateFlowField(Square* exitPoint);
 	void SpawnAgent(Point2f position);
 	std::vector<Square*> GetNeighbours(Square* square);
+	std::vector<Square*> Dijkstra(Square* startPoint, Square* endPoint);
 };

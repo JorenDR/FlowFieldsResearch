@@ -25,6 +25,30 @@ void Game::Initialize( )
 			m_VecSquares.push_back(newSquare);
 		}
 	}
+
+	for (Square* currentSquare : m_VecSquares)
+	{
+		for (Square* neighbourSquare : m_VecSquares)
+		{
+			if ((neighbourSquare->m_X + m_RectSize == currentSquare->m_X && neighbourSquare->m_Y == currentSquare->m_Y) ||
+				(neighbourSquare->m_X + m_RectSize == currentSquare->m_X && neighbourSquare->m_Y + m_RectSize == currentSquare->m_Y) ||
+				(neighbourSquare->m_X + m_RectSize == currentSquare->m_X && neighbourSquare->m_Y - m_RectSize == currentSquare->m_Y) ||
+				(neighbourSquare->m_X - m_RectSize == currentSquare->m_X && neighbourSquare->m_Y == currentSquare->m_Y) ||
+				(neighbourSquare->m_Y - m_RectSize == currentSquare->m_Y && neighbourSquare->m_X == currentSquare->m_X) ||
+				(neighbourSquare->m_Y - m_RectSize == currentSquare->m_Y && neighbourSquare->m_X + m_RectSize == currentSquare->m_X) ||
+				(neighbourSquare->m_Y - m_RectSize == currentSquare->m_Y && neighbourSquare->m_X - m_RectSize == currentSquare->m_X) ||
+				(neighbourSquare->m_Y + m_RectSize == currentSquare->m_Y && neighbourSquare->m_X == currentSquare->m_X))
+			{
+				currentSquare->m_Neighbours.push_back(neighbourSquare);
+			}
+			
+		}
+
+	}
+
+	m_Start = m_VecSquares.at(0);
+	m_End = m_VecSquares.at(m_VecSquares.size()-1);
+	//Dijkstra(m_Start, m_End);
 }
 
 void Game::Cleanup( )
@@ -49,20 +73,23 @@ void Game::Update( float elapsedSec )
 {
 	for (Agent* currentAgent : m_VecAgentPointers)
 	{
-		if (currentAgent->Update(elapsedSec))
-		{
+		//if (currentAgent->Update(elapsedSec))
+		//{
+			//std::cout << "\nAgent updating!";
 			for (Square* currentSquare : m_VecSquares)
 			{
-				if (currentSquare->m_PointingAt.x != 0 &&
+				if (currentSquare->m_PointingAtSquare &&
 					currentAgent->GetPosition().x < currentSquare->m_X + m_RectSize / 2 &&
 					currentAgent->GetPosition().x > currentSquare->m_X - m_RectSize / 2 &&
-					m_Window.height - currentAgent->GetPosition().y < currentSquare->m_Y + m_RectSize / 2 &&
-					m_Window.height - currentAgent->GetPosition().y > currentSquare->m_Y - m_RectSize / 2)
+					
+					currentAgent->GetPosition().y < currentSquare->m_Y + m_RectSize / 2 &&
+					currentAgent->GetPosition().y > currentSquare->m_Y - m_RectSize / 2)
 				{
-					currentAgent->SetDestination(currentSquare->m_PointingAt);
+					//currentAgent->SetDestination(currentSquare->m_PointingAtSquare->m_Position);
+					currentAgent->MoveTowards(currentAgent->GetPosition(), currentSquare->m_PointingAtSquare->m_Position, currentAgent->GetSpeed());
 				}
 			}
-		}
+		//}
 	}
 }
 
@@ -75,42 +102,42 @@ void Game::Draw( ) const
 	for (const Square* currentSquare : m_VecSquares)
 	{
 		utils::SetColor(Color4f(1, 1, 1, 1));
-		utils::DrawRect(Rectf(currentSquare->m_X - m_RectSize / 2, currentSquare->m_Y - m_RectSize / 2, m_RectSize, m_RectSize));
-		utils::DrawEllipse(currentSquare->m_X, currentSquare->m_Y, 2.f, 2.f);
-
-		switch (currentSquare->m_Direction)
-		{
-		case Square::Direction::Up:
-			utils::DrawEllipse(currentSquare->m_X, currentSquare->m_Y + ellipseSize*2, ellipseSize, ellipseSize);
-			utils::DrawEllipse(currentSquare->m_X, currentSquare->m_Y + ellipseSize*4, ellipseSize, ellipseSize);
-			utils::SetColor(Color4f(1, 0, 1, 1));
-			break;
-		case Square::Direction::Down:
-			utils::DrawEllipse(currentSquare->m_X, currentSquare->m_Y - ellipseSize * 2, ellipseSize, ellipseSize);
-			utils::DrawEllipse(currentSquare->m_X, currentSquare->m_Y - ellipseSize * 4, ellipseSize, ellipseSize);
-			utils::SetColor(Color4f(0, 0, 0, 1));
-			break;
-		case Square::Direction::Left:
-			utils::DrawEllipse(currentSquare->m_X - ellipseSize * 2, currentSquare->m_Y , ellipseSize, ellipseSize);
-			utils::DrawEllipse(currentSquare->m_X - ellipseSize * 4, currentSquare->m_Y , ellipseSize, ellipseSize);
-			utils::SetColor(Color4f(0, 1, 1, 1));
-			break;
-		case Square::Direction::Right:
-			utils::DrawEllipse(currentSquare->m_X + ellipseSize * 2, currentSquare->m_Y, ellipseSize, ellipseSize);
-			utils::DrawEllipse(currentSquare->m_X + ellipseSize * 4, currentSquare->m_Y, ellipseSize, ellipseSize);
-			utils::SetColor(Color4f(0, 1, 0, 1));
-			break;
-		case Square::Direction::Exit:
-			utils::SetColor(Color4f(1, 0, 0, 1));
-			break;
-		default:
-			break;
-		}
-
-		if (currentSquare->m_PointingAt.x != 0)
-		{
-			utils::DrawLine(Point2f(currentSquare->m_X, currentSquare->m_Y), currentSquare->m_PointingAt);
-		}
+		//utils::DrawRect(Rectf(currentSquare->m_X - m_RectSize / 2, currentSquare->m_Y - m_RectSize / 2, m_RectSize, m_RectSize));
+		//utils::DrawEllipse(currentSquare->m_X, currentSquare->m_Y, 2.f, 2.f);
+		//
+		//switch (currentSquare->m_Direction)
+		//{
+		//case Square::Direction::Up:
+		//	utils::DrawEllipse(currentSquare->m_X, currentSquare->m_Y + ellipseSize*2, ellipseSize, ellipseSize);
+		//	utils::DrawEllipse(currentSquare->m_X, currentSquare->m_Y + ellipseSize*4, ellipseSize, ellipseSize);
+		//	utils::SetColor(Color4f(1, 0, 1, 1));
+		//	break;
+		//case Square::Direction::Down:
+		//	utils::DrawEllipse(currentSquare->m_X, currentSquare->m_Y - ellipseSize * 2, ellipseSize, ellipseSize);
+		//	utils::DrawEllipse(currentSquare->m_X, currentSquare->m_Y - ellipseSize * 4, ellipseSize, ellipseSize);
+		//	utils::SetColor(Color4f(0, 0, 0, 1));
+		//	break;
+		//case Square::Direction::Left:
+		//	utils::DrawEllipse(currentSquare->m_X - ellipseSize * 2, currentSquare->m_Y , ellipseSize, ellipseSize);
+		//	utils::DrawEllipse(currentSquare->m_X - ellipseSize * 4, currentSquare->m_Y , ellipseSize, ellipseSize);
+		//	utils::SetColor(Color4f(0, 1, 1, 1));
+		//	break;
+		//case Square::Direction::Right:
+		//	utils::DrawEllipse(currentSquare->m_X + ellipseSize * 2, currentSquare->m_Y, ellipseSize, ellipseSize);
+		//	utils::DrawEllipse(currentSquare->m_X + ellipseSize * 4, currentSquare->m_Y, ellipseSize, ellipseSize);
+		//	utils::SetColor(Color4f(0, 1, 0, 1));
+		//	break;
+		//case Square::Direction::Exit:
+		//	utils::SetColor(Color4f(1, 0, 0, 1));
+		//	break;
+		//default:
+		//	break;
+		//}
+		//
+		//if (currentSquare->m_PointingAt.x != 0)
+		//{
+		//	utils::DrawLine(Point2f(currentSquare->m_X, currentSquare->m_Y), currentSquare->m_PointingAt);
+		//}
 
 		//if(currentSquare->m_Direction != Square::Direction::Null) utils::FillRect(Rectf(currentSquare->m_X - m_RectSize / 2, currentSquare->m_Y - m_RectSize / 2, m_RectSize, m_RectSize));
 
@@ -125,7 +152,37 @@ void Game::Draw( ) const
 		//	utils::SetColor(Color4f(1, 0, 0, 1));
 		//	utils::FillRect(Rectf(currentSquare.x - m_RectSize / 2, currentSquare.y - m_RectSize / 2, m_RectSize, m_RectSize));
 		//}
+
+		if (currentSquare->m_PointingAtSquare)
+		{
+			if (currentSquare->m_PointingAtSquare->m_Position.x == currentSquare->m_Position.x &&
+				currentSquare->m_PointingAtSquare->m_Position.y == currentSquare->m_Position.y)
+			{
+				utils::SetColor(Color4f(1, 0, 0, 1));
+				utils::FillRect(Rectf(currentSquare->m_X - m_RectSize / 2, currentSquare->m_Y - m_RectSize / 2, m_RectSize, m_RectSize));
+			}
+			else
+			{
+				utils::DrawLine(currentSquare->m_Position, currentSquare->m_PointingAtSquare->m_Position);
+				utils::DrawPoint(currentSquare->m_PointingAtSquare->m_Position);
+			}
+		}
+		else 
+		{
+			utils::SetColor(Color4f(1, 0, 0, 1));
+			utils::FillRect(Rectf(currentSquare->m_X - m_RectSize / 2, currentSquare->m_Y - m_RectSize / 2, m_RectSize, m_RectSize));
+		}
 	}
+
+	utils::SetColor(Color4f(0, 1, 0, 1));
+	utils::FillRect(Rectf(m_Start->m_X - m_RectSize / 2, m_Start->m_Y - m_RectSize / 2, m_RectSize, m_RectSize));
+
+
+	//for (Square* currentSquare : m_Path)
+	//{
+	//	utils::SetColor(Color4f(1.f, 0, 0, 1.f));
+	//	utils::DrawEllipse(Point2f(currentSquare->m_X, currentSquare->m_Y), 10.f, 10.f);
+	//}
 
 	for (Agent* currentAgent : m_VecAgentPointers)
 	{
@@ -158,14 +215,40 @@ void Game::ProcessMouseDownEvent( const SDL_MouseButtonEvent& e )
 			if (e.x < currentSquare->m_X + m_RectSize / 2 && e.x > currentSquare->m_X - m_RectSize / 2
 				&& m_Window.height - e.y < currentSquare->m_Y + m_RectSize / 2 && m_Window.height - e.y > currentSquare->m_Y - m_RectSize / 2)
 			{
-				currentSquare->m_Direction = Square::Direction::Exit;
-				CalculateFlowField(currentSquare);
+				//currentSquare->m_Direction = Square::Direction::Exit;
+				//CalculateFlowField(currentSquare);
+				m_Start = currentSquare;
+				m_Path = Dijkstra(m_Start, m_End);
+
+				for (Square* pathSquare : m_VecSquares)
+				{
+					if (pathSquare != currentSquare)
+					{
+						Dijkstra(pathSquare, currentSquare);
+					}
+				}
 			}
 		}
 
 		break;
 	case SDL_BUTTON_RIGHT:
-		SpawnAgent(Point2f(float(e.x), float(e.y)));
+		//SpawnAgent(Point2f(float(e.x), float(e.y)));
+
+		for (Square* currentSquare : m_VecSquares)
+		{
+			currentSquare->m_Direction = Square::Direction::Null;
+
+			if (e.x < currentSquare->m_X + m_RectSize / 2 && e.x > currentSquare->m_X - m_RectSize / 2
+				&& m_Window.height - e.y < currentSquare->m_Y + m_RectSize / 2 && m_Window.height - e.y > currentSquare->m_Y - m_RectSize / 2)
+			{
+				//currentSquare->m_Direction = Square::Direction::Exit;
+				//CalculateFlowField(currentSquare);
+				//m_End = currentSquare;
+				//m_Path = Dijkstra(m_Start, m_End);
+
+				SpawnAgent(Point2f(currentSquare->m_X, m_Window.height - currentSquare->m_Y));
+			}
+		}
 
 		break;
 	case SDL_BUTTON_MIDDLE:
@@ -196,10 +279,115 @@ void Game::ClearBackground( ) const
 	glClear( GL_COLOR_BUFFER_BIT );
 }
 
+float Game::Distance(float x1, float y1, float x2, float y2)
+{
+	// Calculating distance
+	return float(sqrt(pow(x2 - x1, 2) +
+		pow(y2 - y1, 2) * 1.0));
+}
+
 void Game::CalculateFlowField(Square* exitPoint)
 {
 	std::cout << "\n\nChecking Flow Field:\n";
 
+
+	/*
+	
+	std::vector<Square*> path;
+	std::vector<Square::SquareRecord> openList;
+	std::vector<Square::SquareRecord> closedList;
+	Square::SquareRecord currentRecord;
+
+	Square::SquareRecord startRecord;
+	startRecord.pSquare = m_VecSquares.at(0);
+	openList.push_back(startRecord);
+
+	//2
+	while (!openList.empty())
+	{
+		//2.A
+		currentSq = *openList.begin();
+
+		//2.B
+		//DONE
+		if (currentRecord.pSquare == exitPoint)
+		{
+			break;
+		}
+
+		//2.C
+		//DONE
+		else
+		{
+			GraphConnection* nextConnection{};
+			for (auto con : m_pGraph->GetNodeConnections(currentRecord.pNode))
+			{
+				T_NodeType* pNextNode = m_pGraph->GetNode(con->GetTo());
+
+				NodeRecord newRecord{};
+				newRecord.pNode = pNextNode;
+				newRecord.pConnection = con;
+				newRecord.costSoFar = currentRecord.costSoFar + con->GetCost();
+				newRecord.estimatedTotalCost = con->GetCost() + currentRecord.costSoFar + GetHeuristicCost(pNextNode, pGoalNode);
+
+				auto isSameNode = [newRecord](const NodeRecord& current) {return current.pNode == newRecord.pNode; };
+				auto nextNodeClosed = std::find_if(closedList.begin(), closedList.end(), isSameNode);
+				if (nextNodeClosed != closedList.end())
+				{
+					if (nextNodeClosed->costSoFar < newRecord.costSoFar)
+					{
+						continue;
+					}
+					else
+					{
+						closedList.erase(std::remove(closedList.begin(), closedList.end(), *nextNodeClosed));
+					}
+				}
+				else
+				{
+					auto nextNodeOpen = std::find_if(openList.begin(), openList.end(), isSameNode);
+					if (nextNodeOpen != openList.end())
+					{
+						if (nextNodeOpen->costSoFar < newRecord.costSoFar)
+						{
+							continue;
+						}
+						else
+						{
+							openList.erase(std::remove(openList.begin(), openList.end(), *nextNodeOpen));
+						}
+					}
+				}
+				openList.push_back(newRecord);
+			}
+		}
+
+		//2.G
+		closedList.push_back(currentRecord);
+		openList.erase(std::remove(openList.begin(), openList.end(), currentRecord));
+	}
+
+	//3
+	while (currentRecord.pNode != pStartNode)
+	{
+		//std::cout << "\nStart";
+		path.push_back(currentRecord.pNode);
+		for (auto node : closedList)
+		{
+			if (node.pNode->GetIndex() == currentRecord.pConnection->GetFrom())
+			{
+				currentRecord = node;
+				break;
+			}
+		}
+	}
+	path.push_back(pStartNode);
+
+	std::reverse(path.begin(), path.end());
+
+	*/
+
+	
 	Point2f pointToCheck{exitPoint->m_X, exitPoint->m_Y};
 	
 	for (Square* currentSquare : m_VecSquares)
@@ -258,6 +446,8 @@ void Game::CalculateFlowField(Square* exitPoint)
 		closedList.push_back(currentSquare);
 		openList.pop_front();
 	}
+
+	
 	
 
 	/*
@@ -409,7 +599,7 @@ void Game::SpawnAgent(Point2f position)
 		}
 	}
 
-	Agent* newAgent = new Agent(pointToSpawn, 5.f);
+	Agent* newAgent = new Agent(pointToSpawn, .2f);
 	m_VecAgentPointers.push_back(newAgent);
 }
 
@@ -418,14 +608,89 @@ std::vector<Square*> Game::GetNeighbours(Square* square)
 	std::vector<Square*> neighbours;
 	for (auto currentSquare : m_VecSquares)
 	{
-		if ((currentSquare->m_X + m_RectSize == square->m_X && currentSquare->m_Y == square->m_Y) ||
-			(currentSquare->m_X - m_RectSize == square->m_X && currentSquare->m_Y == square->m_Y) ||
-			(currentSquare->m_Y - m_RectSize == square->m_Y && currentSquare->m_X == square->m_X) ||
-			(currentSquare->m_Y + m_RectSize == square->m_Y && currentSquare->m_X == square->m_X))
+		if (currentSquare)
 		{
-			neighbours.push_back(currentSquare);
+			if ((currentSquare->m_X + m_RectSize == square->m_X && currentSquare->m_Y == square->m_Y) ||
+				(currentSquare->m_X + m_RectSize == square->m_X && currentSquare->m_Y + m_RectSize == square->m_Y) ||
+				(currentSquare->m_X + m_RectSize == square->m_X && currentSquare->m_Y - m_RectSize == square->m_Y) ||
+				(currentSquare->m_X - m_RectSize == square->m_X && currentSquare->m_Y == square->m_Y) ||
+				(currentSquare->m_Y - m_RectSize == square->m_Y && currentSquare->m_X == square->m_X) ||
+				(currentSquare->m_Y - m_RectSize == square->m_Y && currentSquare->m_X + m_RectSize == square->m_X) ||
+				(currentSquare->m_Y - m_RectSize == square->m_Y && currentSquare->m_X - m_RectSize == square->m_X) ||
+				(currentSquare->m_Y + m_RectSize == square->m_Y && currentSquare->m_X == square->m_X))
+			{
+				neighbours.push_back(currentSquare);
+			}
+		}
+		else
+		{
+			std::cout << "\nTried to get neighbour, but currenSquare is nullptr";
 		}
 	}
 
 	return neighbours;
 }
+
+std::vector<Square*> Game::Dijkstra(Square* startPoint, Square* endPoint)
+{
+	std::queue<Square*> openList;
+	std::map<Square*, Square*> closedList;
+
+	openList.push(startPoint);
+
+	while (!openList.empty())
+	{
+		Square* pCurrentNode = openList.front();
+		openList.pop();
+
+		if (pCurrentNode == endPoint)
+		{
+			break;
+		}
+
+		for (auto con : pCurrentNode->m_Neighbours)
+		{
+			Square* pNextNode;
+			float distanceToEnd{9999};
+			for (auto nextNode : pCurrentNode->m_Neighbours)
+			{
+				float distance{ Distance(nextNode->m_X, nextNode->m_Y, endPoint->m_X, endPoint->m_Y) };
+				if (distance < distanceToEnd)
+				{
+					distanceToEnd = distance;
+					pNextNode = nextNode;
+				}
+			}
+
+			if (closedList.find(pNextNode) == closedList.end())
+			{
+				openList.push(pNextNode);
+				closedList[pNextNode] = pCurrentNode;
+			}
+		}
+	}
+
+	std::vector<Square*> path;
+	Square* pCurrentNode = endPoint;
+
+	while (pCurrentNode != startPoint)
+	{
+		if (path.size() != 0)
+		{
+			//path.at(path.size() - 1)->m_PointingAtSquare = pCurrentNode;
+			pCurrentNode->m_PointingAtSquare = path.at(path.size() - 1);
+		}
+
+		path.push_back(pCurrentNode);
+		pCurrentNode = closedList[pCurrentNode];
+	}
+	if (path.size() > 2)
+		endPoint->m_PointingAtSquare = path.at(1);
+
+	path.push_back(startPoint);
+	startPoint->m_PointingAtSquare = path.at(path.size() - 1);
+	std::reverse(path.begin(), path.end());
+
+	return path;
+}
+
