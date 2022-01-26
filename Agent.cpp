@@ -15,7 +15,6 @@ Agent::Agent(Point2f position, float speed)
 
 Agent::~Agent()
 {
-	std::cout << "\nAgent destroyed";
 }
 
 void Agent::MoveTowards(Point2f target)
@@ -82,4 +81,9 @@ void Agent::SetDestination(Point2f target)
 {
 	std::cout << "\nNew destination entered";
 	m_Destination = target;
+}
+
+void Agent::SetPosition(Point2f newPosition)
+{
+	m_Position = newPosition;
 }

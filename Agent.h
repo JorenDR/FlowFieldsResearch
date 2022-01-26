@@ -17,6 +17,7 @@ public:
 	float GetSpeed();
 
 	void SetDestination(Point2f target);
+	void SetPosition(Point2f newPosition);
 private:
 	Point2f m_Position, m_Destination;
 	float m_Speed;

@@ -12,7 +12,6 @@ Square::Square(float x, float y, Direction direction, bool obstacle)
 	, m_PointingAtSquare{ nullptr }
 	, m_Value{ 0 }
 {
-	std::cout << "\nSquare created";
 }
 
 Square::~Square()

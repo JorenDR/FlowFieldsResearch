@@ -31,8 +31,8 @@ private:
 	// DATA MEMBERS
 
 	const Window m_Window;
-	static const int m_GridWidth{ 20 }, m_GridHeight{ 10 };
-	float m_RectSize{ 40 };
+	static const int m_GridWidth{ 40 }, m_GridHeight{ 20 };
+	float m_RectSize{ 20 };
 	std::vector<Square*> m_VecSquares;
 	std::vector<Square*> m_Path;
 	std::vector<Agent*> m_VecAgentPointers;
@@ -47,7 +47,6 @@ private:
 
 	float Distance(float x1, float y1, float x2, float y2);
 
-	void CalculateFlowField(Square* exitPoint);
 	void SpawnAgent(Point2f position);
 	std::vector<Square*> GetNeighbours(Square* square);
 	std::vector<Square*> Dijkstra(Square* startPoint, Square* endPoint);
